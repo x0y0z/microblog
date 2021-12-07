@@ -67,7 +67,7 @@ def create_app(config_class=Config):
             mail_handler = SMTPHandler(
                 mailhost=(app.config['MAIL_SERVER'], app.config['MAIL_PORT']),
                 fromaddr=app.config['ADMINS'][0],
-                toaddrs=app.config['ADMINS'], subject=f"Microblog Failure ({socket.gethostname()})",
+                toaddrs=app.config['ADMINS'], subject='Microblog Failure{}'.format(' ({})'.format(socket.gethostname()) if app.config['MAIL_SUBJECT_ADD_HOSTNAME'] else ''),
                 credentials=auth, secure=secure)
             mail_handler.setLevel(logging.ERROR)
             app.logger.addHandler(mail_handler)
