@@ -53,8 +53,6 @@ def create_app(config_class=Config):
     from app.api import bp as api_bp
     app.register_blueprint(api_bp, url_prefix='/api')
 
-    import socket
-
     if not app.debug and not app.testing:
         if app.config['MAIL_SERVER']:
             auth = None
@@ -67,7 +65,7 @@ def create_app(config_class=Config):
             mail_handler = SMTPHandler(
                 mailhost=(app.config['MAIL_SERVER'], app.config['MAIL_PORT']),
                 fromaddr=app.config['ADMINS'][0],
-                toaddrs=app.config['ADMINS'], subject='Microblog Failure{}'.format(' ({})'.format(socket.gethostname()) if app.config['MAIL_SUBJECT_ADD_HOSTNAME'] else ''),
+                toaddrs=app.config['ADMINS'], subject='{}Microblog Failure'.format(app.config['MAIL_SUBJECT_PREFIX']),
                 credentials=auth, secure=secure)
             mail_handler.setLevel(logging.ERROR)
             app.logger.addHandler(mail_handler)

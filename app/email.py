@@ -12,7 +12,7 @@ def send_async_email(app, msg):
 
 def send_email(subject, sender, recipients, text_body, html_body,
                attachments=None, sync=False):
-    msg = Message('{}{}'.format(subject,' ({})'.format(socket.gethostname()) if current_app.config['MAIL_SUBJECT_ADD_HOSTNAME'] else ''), sender=sender, recipients=recipients)
+    msg = Message('{}{}'.format(current_app.config['MAIL_SUBJECT_PREFIX'], subject), sender=sender, recipients=recipients)
     msg.body = text_body
     msg.html = html_body
     if attachments:
