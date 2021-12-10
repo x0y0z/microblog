@@ -7,9 +7,14 @@ load_dotenv(os.path.join(basedir, '.env'))
 
 class Config(object):
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'you-will-never-guess'
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', '').replace(
-        'postgres://', 'postgresql://') or \
-        'sqlite:///' + os.path.join(basedir, 'app.db')
+    if os.environ.get('RDS_PREFIX') is not None:
+        SQLALCHEMY_DATABASE_URI = '{}://{}:{}@{}:{}/{}'.format(
+            os.environ.get('RDS_PREFIX'),
+            os.environ.get('RDS_USERNAME'), os.environ.get('RDS_PASSWORD'),
+            os.environ.get('RDS_HOSTNAME'), os.environ.get('RDS_PORT'),
+            os.environ.get('RDS_DB_NAME'))
+    else:
+        SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'app.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     LOG_TO_STDOUT = os.environ.get('LOG_TO_STDOUT')
     MAIL_SERVER = os.environ.get('MAIL_SERVER')
