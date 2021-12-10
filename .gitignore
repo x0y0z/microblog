@@ -37,6 +37,12 @@ nosetests.xml
 
 .env
 .idea
+.vagrant
 venv
 app.db
 microblog.log*
+
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml
