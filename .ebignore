@@ -35,7 +35,6 @@ nosetests.xml
 .project
 .pydevproject
 
-.env
 .idea
 .vagrant
 venv
