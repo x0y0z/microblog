@@ -35,15 +35,20 @@ nosetests.xml
 .project
 .pydevproject
 
+.DS_Store
 .idea
 .vagrant
 venv
 app.db
 microblog.log*
 
-# Files not mentioned in .gitignore
-deployment
+# Exclude unnecesary files not mentioned in .gitignore
+#.git*
+#.platform
 boot.sh
+deployment
 Dockerfile
-README.md
+LICENSE
+README*
+tests.py
 Vagrantfile

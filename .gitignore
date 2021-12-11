@@ -35,6 +35,7 @@ nosetests.xml
 .project
 .pydevproject
 
+.DS_Store
 .env
 .idea
 .vagrant
