@@ -34,6 +34,7 @@ Microblog supports the following environment variables (see `config.py`):
 
 ### Linux
 See the [Deployment on Linux](https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-xvii-deployment-on-linux) tutorial for further details.
+Since this is a direct deployment on top of Linux, it is also suitable for the Infrastructure as a Service (IaaS) cloud service model.
 
 It is recommended to create a `.env` file in order to set the required environment variables.
 
@@ -46,4 +47,6 @@ Heroku is a cloud service delivered through a Platform as a Service (PaaS) model
 See the [Deployment on Heroku](https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-xviii-deployment-on-heroku) tutorial for further details.
 
 ### AWS Elastic Beanstalk
+[AWS Elastic Beanstalk](https://aws.amazon.com/elasticbeanstalk/) is a Platform as a Service (PaaS) offering by AWS.
+
 It is recommended to set any required environment variables via the  a AWS Elastic Beanstalk console or via the EB CLI using `eb setenv VAR1=VAL1 VAR2=VAL2 ...`.
