@@ -30,4 +30,5 @@ class Config(object):
     ELASTICSEARCH_USER = os.environ.get('ELASTICSEARCH_USER')
     ELASTICSEARCH_PSW = os.environ.get('ELASTICSEARCH_PSW')
     REDIS_URL = os.environ.get('REDIS_URL') or 'redis://'
+    REDIS_PSW = os.environ.get('REDIS_PSW')
     POSTS_PER_PAGE = 25

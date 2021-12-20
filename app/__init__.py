@@ -25,6 +25,23 @@ moment = Moment()
 babel = Babel()
 
 
+def get_redis_client(url, password=None):
+    # redis.Redis.from_url() doesn't support passing the password separately
+    # Author: Owen Taylor
+    # Source: https://github.com/andymccurdy/redis-py/issues/1347
+    from urllib.parse import quote, urlparse, urlunparse
+
+    if password:
+        parts = urlparse(url)
+        netloc = f':{quote(password)}@{parts.hostname}'
+        if parts.port is not None:
+            netloc += f':{parts.port}'
+
+        url = urlunparse((parts.scheme, netloc, parts.path, parts.params, parts.query, parts.fragment))
+
+    return Redis.from_url(url, decode_components=True)
+
+
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
@@ -39,7 +56,7 @@ def create_app(config_class=Config):
     app.elasticsearch = Elasticsearch([app.config['ELASTICSEARCH_URL']], \
                                       http_auth=(app.config['ELASTICSEARCH_USER'], app.config['ELASTICSEARCH_PSW'])) \
         if app.config['ELASTICSEARCH_URL'] else None
-    app.redis = Redis.from_url(app.config['REDIS_URL'])
+    app.redis = get_redis_client(app.config['REDIS_URL'], app.config['REDIS_PSW'])
     app.task_queue = rq.Queue('microblog-tasks', connection=app.redis)
 
     from app.errors import bp as errors_bp
