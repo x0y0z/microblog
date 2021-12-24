@@ -26,6 +26,7 @@ class Config(object):
     ADMINS = [os.environ.get('ADMIN_EMAIL')]
     LANGUAGES = ['en', 'es']
     MS_TRANSLATOR_KEY = os.environ.get('MS_TRANSLATOR_KEY')
+    MS_TRANSLATOR_REGION = os.environ.get('MS_TRANSLATOR_REGION')
     ELASTICSEARCH_URL = os.environ.get('ELASTICSEARCH_URL')
     ELASTICSEARCH_USER = os.environ.get('ELASTICSEARCH_USER')
     ELASTICSEARCH_PSW = os.environ.get('ELASTICSEARCH_PSW')
