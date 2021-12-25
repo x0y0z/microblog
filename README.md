@@ -25,9 +25,14 @@ Microblog supports the following environment variables (see `config.py`):
   * `MAIL_PASSWORD`: Password for SMTP authentication.
 * `ADMIN_EMAIL`: This email address is used that as sender for all emails and as recipient for exception failure emails.
 * `MAIL_SUBJECT_PREFIX`: Prefix to append to each email subject. Useful to identify the environment (DEV / TEST / PROD) an email originated from.
-* `REDIS_URL`: URL for redis service, used for handling of asynchronous background tasks.
+* `CELERY_BROKER_URL`: URL for Celery broker, used for handling of asynchronous background tasks.
+* `CELERY_RESULT_BACKEND`: URL for Celery result backend
+* `CELERY_QUEUE_MB_TASKS`: Celery worker queue to use for background tasks
 * `MS_TRANSLATOR_KEY`: Authentication key for the Microsoft translator service.
+* `MS_TRANSLATOR_REGION`: MS Azure cloud computing region where the translator service runs
 * `ELASTICSEARCH_URL`: URL for Elasticsearch service, used for full-text search of blog posts.
+* `ELASTICSEARCH_USER`: User name for authentication to Elasticsearch service
+* `ELASTICSEARCH_PSW`: Password for authentication to Elasticsearch service
 
 
 ## Deployment

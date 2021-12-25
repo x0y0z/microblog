@@ -30,6 +30,7 @@ class Config(object):
     ELASTICSEARCH_URL = os.environ.get('ELASTICSEARCH_URL')
     ELASTICSEARCH_USER = os.environ.get('ELASTICSEARCH_USER')
     ELASTICSEARCH_PSW = os.environ.get('ELASTICSEARCH_PSW')
-    REDIS_URL = os.environ.get('REDIS_URL') or 'redis://'
-    REDIS_PSW = os.environ.get('REDIS_PSW')
+    CELERY_BROKER_URL     = os.environ.get('CELERY_BROKER_URL')
+    CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND')
+    CELERY_QUEUE_MB_TASKS = os.environ.get('CELERY_QUEUE_MB_TASKS')
     POSTS_PER_PAGE = 25

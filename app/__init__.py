@@ -10,8 +10,7 @@ from flask_bootstrap import Bootstrap
 from flask_moment import Moment
 from flask_babel import Babel, lazy_gettext as _l
 from elasticsearch import Elasticsearch
-from redis import Redis
-import rq
+from celery import Celery
 from config import Config
 
 db = SQLAlchemy()
@@ -23,23 +22,7 @@ mail = Mail()
 bootstrap = Bootstrap()
 moment = Moment()
 babel = Babel()
-
-
-def get_redis_client(url, password=None):
-    # redis.Redis.from_url() doesn't support passing the password separately
-    # Author: Owen Taylor
-    # Source: https://github.com/andymccurdy/redis-py/issues/1347
-    from urllib.parse import quote, urlparse, urlunparse
-
-    if password:
-        parts = urlparse(url)
-        netloc = f':{quote(password)}@{parts.hostname}'
-        if parts.port is not None:
-            netloc += f':{parts.port}'
-
-        url = urlunparse((parts.scheme, netloc, parts.path, parts.params, parts.query, parts.fragment))
-
-    return Redis.from_url(url, decode_components=True)
+celery = Celery()
 
 
 def create_app(config_class=Config):
@@ -56,8 +39,8 @@ def create_app(config_class=Config):
     app.elasticsearch = Elasticsearch([app.config['ELASTICSEARCH_URL']], \
                                       http_auth=(app.config['ELASTICSEARCH_USER'], app.config['ELASTICSEARCH_PSW'])) \
         if app.config['ELASTICSEARCH_URL'] else None
-    app.redis = get_redis_client(app.config['REDIS_URL'], app.config['REDIS_PSW'])
-    app.task_queue = rq.Queue('microblog-tasks', connection=app.redis)
+    app.celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
+    app.celery.conf.update(app.config)
 
     from app.errors import bp as errors_bp
     app.register_blueprint(errors_bp)

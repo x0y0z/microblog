@@ -2,8 +2,7 @@ import json
 import sys
 import time
 from flask import render_template
-from rq import get_current_job
-from app import create_app, db
+from app import celery, create_app, db
 from app.models import User, Post, Task
 from app.email import send_email
 
@@ -11,23 +10,23 @@ app = create_app()
 app.app_context().push()
 
 
-def _set_task_progress(progress):
-    job = get_current_job()
-    if job:
-        job.meta['progress'] = progress
-        job.save_meta()
-        task = Task.query.get(job.get_id())
-        task.user.add_notification('task_progress', {'task_id': job.get_id(),
+def _set_task_progress(self, progress):
+    self.update_state(state='STARTED' if progress == 0 else ('SUCCESS' if progress == 100 else 'PROGRESS'),
+                      meta={'progress': progress})
+    task = Task.query.get(self.request.id)
+    if task:
+        task.user.add_notification('task_progress', {'task_id': task.id,
                                                      'progress': progress})
         if progress >= 100:
             task.complete = True
         db.session.commit()
 
 
-def export_posts(user_id):
+@celery.task(bind=True)
+def export_posts(self, user_id):
     try:
         user = User.query.get(user_id)
-        _set_task_progress(0)
+        _set_task_progress(self, 0)
         data = []
         i = 0
         total_posts = user.posts.count()
@@ -36,7 +35,7 @@ def export_posts(user_id):
                          'timestamp': post.timestamp.isoformat() + 'Z'})
             time.sleep(5)
             i += 1
-            _set_task_progress(100 * i // total_posts)
+            _set_task_progress(self, 100 * i // total_posts)
 
         send_email('[Microblog] Your blog posts',
                 sender=app.config['ADMINS'][0], recipients=[user.email],
@@ -47,5 +46,5 @@ def export_posts(user_id):
                               json.dumps({'posts': data}, indent=4))],
                 sync=True)
     except:
-        _set_task_progress(100)
+        _set_task_progress(self, 100)
         app.logger.error('Unhandled exception', exc_info=sys.exc_info())
