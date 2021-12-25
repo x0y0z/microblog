@@ -24,6 +24,7 @@ class Config(object):
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
     MAIL_SUBJECT_PREFIX = os.environ.get('MAIL_SUBJECT_PREFIX')
     ADMINS = [os.environ.get('ADMIN_EMAIL')]
+    EXPORT_POST_SLEEP_SECONDS = int(os.environ.get('EXPORT_POST_SLEEP_SECONDS') or 5)
     LANGUAGES = ['en', 'es']
     MS_TRANSLATOR_KEY = os.environ.get('MS_TRANSLATOR_KEY')
     MS_TRANSLATOR_REGION = os.environ.get('MS_TRANSLATOR_REGION')

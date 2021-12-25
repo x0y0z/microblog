@@ -33,6 +33,7 @@ def export_posts(self, user_id):
         for post in user.posts.order_by(Post.timestamp.asc()):
             data.append({'body': post.body,
                          'timestamp': post.timestamp.isoformat() + 'Z'})
+            time.sleep(app.config['EXPORT_POST_SLEEP_SECONDS'])
             i += 1
             _set_task_progress(self, 100 * i // total_posts)
 

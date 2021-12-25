@@ -12,6 +12,7 @@ from flask_babel import Babel, lazy_gettext as _l
 from elasticsearch import Elasticsearch
 from celery import Celery
 from config import Config
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 db = SQLAlchemy()
 migrate = Migrate()
@@ -28,6 +29,8 @@ celery = Celery()
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
+    # tell Flask it is running behind a reverse proxy, so it can set response headers accordingly
+    app.wsgi_app = ProxyFix(app.wsgi_app)
 
     db.init_app(app)
     migrate.init_app(app, db)
