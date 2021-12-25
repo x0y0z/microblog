@@ -286,6 +286,6 @@ class Task(db.Model):
 
     def get_progress(self):
         result = self.get_celery_result()
-        return result.info.get('progress', 0) if self is not None else 100
+        return result.info.get('progress', 0) if self is not None and result.info is not None else 100
 
 from app import tasks
