@@ -8,9 +8,10 @@ from flask import current_app, url_for
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
+import redis
+import rq
 from app import db, login
 from app.search import add_to_index, remove_from_index, query_index
-from celery.result import AsyncResult
 
 
 class SearchableMixin(object):
@@ -172,8 +173,10 @@ class User(UserMixin, PaginatedAPIMixin, db.Model):
         return n
 
     def launch_task(self, name, description, *args, **kwargs):
-        result = tasks.export_posts.apply_async(args=[self.id], queue=current_app.config.get('CELERY_QUEUE_MB_TASKS'))
-        task = Task(id=result.id, name=name, description=description, user=self)
+        rq_job = current_app.task_queue.enqueue('app.tasks.' + name, self.id,
+                                                *args, **kwargs)
+        task = Task(id=rq_job.get_id(), name=name, description=description,
+                    user=self)
         db.session.add(task)
         return task
 
@@ -277,15 +280,13 @@ class Task(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     complete = db.Column(db.Boolean, default=False)
 
-    def get_celery_result(self):
+    def get_rq_job(self):
         try:
-            result = AsyncResult(self.id, app=current_app.celery)
-        except:
+            rq_job = rq.job.Job.fetch(self.id, connection=current_app.redis)
+        except (redis.exceptions.RedisError, rq.exceptions.NoSuchJobError):
             return None
-        return result
+        return rq_job
 
     def get_progress(self):
-        result = self.get_celery_result()
-        return result.info.get('progress', 0) if self is not None and result.info is not None else 100
-
-from app import tasks
+        job = self.get_rq_job()
+        return job.meta.get('progress', 0) if job is not None else 100
