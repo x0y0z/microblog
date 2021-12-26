@@ -34,3 +34,15 @@ class Config(object):
     REDIS_URL = os.environ.get('REDIS_URL') or 'redis://'
     REDIS_PSW = os.environ.get('REDIS_PSW')
     POSTS_PER_PAGE = 25
+    AUTH_USE_AWS_COGNITO = os.environ.get('AUTH_USE_AWS_COGNITO')
+
+    # Setup the flask-cognito-auth extention
+    COGNITO_REGION = os.environ.get('COGNITO_REGION')
+    COGNITO_USER_POOL_ID = os.environ.get('COGNITO_USER_POOL_ID')
+    COGNITO_CLIENT_ID = os.environ.get('COGNITO_CLIENT_ID')
+    COGNITO_CLIENT_SECRET = os.environ.get('COGNITO_CLIENT_SECRET')
+    COGNITO_DOMAIN = os.environ.get('COGNITO_DOMAIN')
+    ERROR_REDIRECT_URI = os.environ.get('ERROR_REDIRECT_URI')
+    COGNITO_STATE = os.environ.get('COGNITO_STATE')
+    COGNITO_REDIRECT_URI = os.environ.get('COGNITO_REDIRECT_URI')
+    COGNITO_SIGNOUT_URI = os.environ.get('COGNITO_SIGNOUT_URI')

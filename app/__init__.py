@@ -5,6 +5,7 @@ from flask import Flask, request, current_app
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
+from flask_cognito_auth import CognitoAuthManager
 from flask_mail import Mail
 from flask_bootstrap import Bootstrap
 from flask_moment import Moment
@@ -18,7 +19,6 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 db = SQLAlchemy()
 migrate = Migrate()
 login = LoginManager()
-login.login_view = 'auth.login'
 login.login_message = _l('Please log in to access this page.')
 mail = Mail()
 bootstrap = Bootstrap()
@@ -56,6 +56,7 @@ def create_app(config_class=Config):
     bootstrap.init_app(app)
     moment.init_app(app)
     babel.init_app(app)
+    cognito = CognitoAuthManager(app)
     app.elasticsearch = Elasticsearch([app.config['ELASTICSEARCH_URL']], \
                                       http_auth=(app.config['ELASTICSEARCH_USER'], app.config['ELASTICSEARCH_PSW'])) \
         if app.config['ELASTICSEARCH_URL'] else None
@@ -65,8 +66,16 @@ def create_app(config_class=Config):
     from app.errors import bp as errors_bp
     app.register_blueprint(errors_bp)
 
-    from app.auth import bp as auth_bp
-    app.register_blueprint(auth_bp, url_prefix='/auth')
+    if app.config['AUTH_USE_AWS_COGNITO']:
+        # use AWS cognito based authentication module
+        from app.cognito import bp as cognito_bp
+        app.register_blueprint(cognito_bp, url_prefix='/cognito')
+        login.login_view = 'cognito.login'
+    else:
+        # use built-in authentication module
+        from app.auth import bp as auth_bp
+        app.register_blueprint(auth_bp, url_prefix='/auth')
+        login.login_view = 'auth.login'
 
     from app.main import bp as main_bp
     app.register_blueprint(main_bp)
