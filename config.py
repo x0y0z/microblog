@@ -1,4 +1,4 @@
-import os
+import os, random
 from dotenv import load_dotenv
 
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -43,6 +43,6 @@ class Config(object):
     COGNITO_CLIENT_SECRET = os.environ.get('COGNITO_CLIENT_SECRET')
     COGNITO_DOMAIN = os.environ.get('COGNITO_DOMAIN')
     ERROR_REDIRECT_URI = os.environ.get('ERROR_REDIRECT_URI')
-    COGNITO_STATE = os.environ.get('COGNITO_STATE')
+    COGNITO_STATE = os.environ.get('COGNITO_STATE') or "{:032x}".format(random.getrandbits(128))
     COGNITO_REDIRECT_URI = os.environ.get('COGNITO_REDIRECT_URI')
     COGNITO_SIGNOUT_URI = os.environ.get('COGNITO_SIGNOUT_URI')
