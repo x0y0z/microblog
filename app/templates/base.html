@@ -30,7 +30,7 @@
                 {% endif %}
                 <ul class="nav navbar-nav navbar-right">
                     {% if current_user.is_anonymous %}
-                    <li><a href="{{ url_for('auth.login') }}">{{ _('Login') }}</a></li>
+                    <li><a href="{{ url_for('cognito.login' if config['AUTH_USE_AWS_COGNITO'] else 'auth.login') }}">{{ _('Login') }}</a></li>
                     {% else %}
                     <li>
                         <a href="{{ url_for('main.messages') }}">{{ _('Messages') }}
@@ -43,7 +43,7 @@
                         </a>
                     </li>
                     <li><a href="{{ url_for('main.user', username=current_user.username) }}">{{ _('Profile') }}</a></li>
-                    <li><a href="{{ url_for('auth.logout') }}">{{ _('Logout') }}</a></li>
+                    <li><a href="{{ url_for('cognito.logout' if config['AUTH_USE_AWS_COGNITO'] else 'auth.logout') }}">{{ _('Logout') }}</a></li>
                     {% endif %}
                 </ul>
             </div>
