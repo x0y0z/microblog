@@ -55,6 +55,8 @@ def parse_arguments():
                         help='CSV file to be imported')
     parser.add_argument('-m', '--max-tweets', type=int, default=0,  # import all lines by default
                         help='maximum number of tweets to be imported')
+    parser.add_argument('-o', '--offset', type=int, default=0,
+                        help='line offset within CSV file to start import at')
     return parser.parse_args()
 
 
@@ -86,7 +88,7 @@ def _parse_covid_tweet(tweet):
     user.about_me = tweet['User Bio'][0:140]
     # generate a random password
     password_chars = string.ascii_letters + string.digits + string.punctuation
-    password = ''.join(random.choice(password_chars) for i in range(PASSWORD_LENGTH))
+    password = ''.join(random.choice(password_chars) for _ in range(PASSWORD_LENGTH))
     user.password_hash = user.set_password(password)
     # prepare post record
     post = Post()
@@ -103,18 +105,21 @@ def _parse_covid_tweet(tweet):
     return user, post
 
 
-def import_csv(filename, max_import_count=0):
+def import_csv(filename, max_import_count=0, skip_lines=0):
     """
     Main function that coordinates the overall data import process.
     """
+    print("Importing up to {} tweets from {}, starting at offset {}".format(max_import_count, filename, skip_lines))
     # statistics dictionary. the sum of posts* and users* should always be the same as tweet_cnt
-    stats = {'posts_ok': 0, 'posts_dup': 0, 'posts_err': 0,
+    stats = {'tweet_cnt': 0,
+             'posts_ok': 0, 'posts_dup': 0, 'posts_err': 0,
              'users_ok': 0, 'users_dup': 0, 'users_err': 0, 'users_skipped': 0,
-             'tweet_cnt': 0,
              }
     # process the input file
-    with open(filename, 'r') as csvfile:
-        for line_no, row in enumerate(csv.DictReader(csvfile)):
+    with open(filename, 'r') as csv_file:
+        for line_no, row in enumerate(csv.DictReader(csv_file)):
+            if line_no <= skip_lines:
+                continue  # skip the first n lines
             # flags to remember insert success
             user_ok = False
             post_ok = False
@@ -129,12 +134,16 @@ def import_csv(filename, max_import_count=0):
             # attempt to insert user
             try:
                 db.session.add(user)
+                db.session.commit()
                 user_ok = True  # flag to remember whether user insert was successful
             except IntegrityError:  # record already exists
                 stats['users_dup'] += 1
             except Exception as e:  # unexpected error
                 stats['users_err'] += 1
                 _log_line_error(line_no, e)
+            # roll back in case user insert failed
+            if not user_ok:
+                db.session.rollback()
             # attempt to insert post
             try:
                 db.session.add(post)
@@ -169,7 +178,7 @@ if __name__ == '__main__':
     app_context = app.app_context()
     app_context.push()
     # for testing purposes only
-    import_csv(filename=args.filename, max_import_count=args.max_tweets)
+    import_csv(filename=args.filename, max_import_count=args.max_tweets, skip_lines=args.offset)
     # tear down flask app
     db.session.remove()
     app_context.pop()
