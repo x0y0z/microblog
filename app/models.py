@@ -83,13 +83,13 @@ class PaginatedAPIMixin(object):
 
 followers = db.Table(
     'followers',
-    db.Column('follower_id', db.Integer, db.ForeignKey('user.id')),
-    db.Column('followed_id', db.Integer, db.ForeignKey('user.id'))
+    db.Column('follower_id', db.BigInteger, db.ForeignKey('user.id')),
+    db.Column('followed_id', db.BigInteger, db.ForeignKey('user.id'))
 )
 
 
 class User(UserMixin, PaginatedAPIMixin, db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.BigInteger, primary_key=True)
     username = db.Column(db.String(64), index=True, unique=True)
     email = db.Column(db.String(120), index=True, unique=True)
     password_hash = db.Column(db.String(128))
@@ -243,10 +243,10 @@ def load_user(id):
 
 class Post(SearchableMixin, db.Model):
     __searchable__ = ['body']
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.BigInteger, primary_key=True)
     body = db.Column(db.String(140))
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    user_id = db.Column(db.BigInteger, db.ForeignKey('user.id'))
     language = db.Column(db.String(5))
 
     def __repr__(self):
@@ -255,8 +255,8 @@ class Post(SearchableMixin, db.Model):
 
 class Message(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    sender_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    recipient_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    sender_id = db.Column(db.BigInteger, db.ForeignKey('user.id'))
+    recipient_id = db.Column(db.BigInteger, db.ForeignKey('user.id'))
     body = db.Column(db.String(140))
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
 
@@ -267,7 +267,7 @@ class Message(db.Model):
 class Notification(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(128), index=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    user_id = db.Column(db.BigInteger, db.ForeignKey('user.id'))
     timestamp = db.Column(db.Float, index=True, default=time)
     payload_json = db.Column(db.Text)
 
@@ -279,7 +279,7 @@ class Task(db.Model):
     id = db.Column(db.String(36), primary_key=True)
     name = db.Column(db.String(128), index=True)
     description = db.Column(db.String(128))
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    user_id = db.Column(db.BigInteger, db.ForeignKey('user.id'))
     complete = db.Column(db.Boolean, default=False)
 
     def get_rq_job(self):
