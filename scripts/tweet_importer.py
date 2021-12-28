@@ -87,7 +87,7 @@ def _print_progress(stats):
     Print import progress.
        Customise this function if a more user-friendly output is required.
     """
-    print(stats)
+    print("{}: {}".format(datetime.now().strftime('%Y-%m-%d %H:%M:%S'), stats))
 
 
 def _log_line_error(line_number, payload):
@@ -127,20 +127,24 @@ def _parse_covid_tweet(tweet):
     return user, post
 
 
-def import_csv(filename, max_import_count=0, skip_lines=0):
+def import_csv(filename, max_import_count=0, offset=0):
     """
     Main function that coordinates the overall data import process.
     """
-    print("Importing up to {} tweets from {}, starting at offset {}".format(max_import_count, filename, skip_lines))
+    # ensure parameters are larger or equal than zero
+    max_count = max(0, max_import_count)
+    skip_count = max(0, offset)
+    print("Importing up to {} tweets from {}, starting at offset {}".format("UNLIMITED" if max_count <= 0 else max_count,
+                                                                            filename, skip_count))
     # statistics dictionary. the sum of posts* and users* should always be the same as tweet_cnt
-    stats = {'tweet_cnt': 0,
+    stats = {'line_no': 0, 'tweet_cnt': 0,
              'posts_ok': 0, 'posts_dup': 0, 'posts_err': 0,
-             'users_ok': 0, 'users_dup': 0, 'users_err': 0, 'users_skipped': 0,
+             'users_ok': 0, 'users_dup': 0, 'users_err': 0, 'users_posterr': 0,
              }
     # process the input file
     with open(filename, 'r') as csv_file:
         for line_no, row in enumerate(csv.DictReader(csv_file)):
-            if line_no <= skip_lines:
+            if line_no <= skip_count:
                 continue  # skip the first n lines
             # flags to remember insert success
             user_ok = False
@@ -181,15 +185,17 @@ def import_csv(filename, max_import_count=0, skip_lines=0):
             # roll back in case post insert failed
             if not post_ok:
                 db.session.rollback()
-                stats['users_skipped'] += 1 if user_ok else 0
+                stats['users_posterr'] += 1 if user_ok else 0
             # total number of lines processed
             stats['tweet_cnt'] += 1
             # max count reached. finish.
-            if 0 < max_import_count <= stats['posts_ok']:
+            if 0 < max_count <= stats['posts_ok']:
+                stats['line_no'] = line_no
                 _print_progress(stats)
                 break
             # print progress after each batch
             if stats['tweet_cnt'] % _BATCH_SIZE == 0:
+                stats['line_no'] = line_no
                 _print_progress(stats)
 
 
@@ -200,7 +206,7 @@ if __name__ == '__main__':
     app_context = app.app_context()
     app_context.push()
     # for testing purposes only
-    import_csv(filename=args.filename, max_import_count=args.max_tweets, skip_lines=args.offset)
+    import_csv(filename=args.filename, max_import_count=args.max_tweets, offset=args.offset)
     # tear down flask app
     db.session.remove()
     app_context.pop()
