@@ -15,6 +15,7 @@ import argparse
 import csv
 import inspect
 import os
+import re
 import pycountry
 import random
 import string
@@ -35,6 +36,27 @@ PASSWORD_LENGTH = 16
 EMAIL_DOMAIN = 'microblog.xyz'
 DEFAULT_DATETIME = datetime(1970, 1, 1)
 _BATCH_SIZE = 100
+# regular expression to capture emojis (source: https://stackoverflow.com/a/58356570)
+_EMOJI = re.compile("["
+                    u"\U0001F600-\U0001F64F"  # emoticons
+                    u"\U0001F300-\U0001F5FF"  # symbols & pictographs
+                    u"\U0001F680-\U0001F6FF"  # transport & map symbols
+                    u"\U0001F1E0-\U0001F1FF"  # flags (iOS)
+                    u"\U00002500-\U00002BEF"  # chinese char
+                    u"\U00002702-\U000027B0"
+                    u"\U00002702-\U000027B0"
+                    u"\U000024C2-\U0001F251"
+                    u"\U0001f926-\U0001f937"
+                    u"\U00010000-\U0010ffff"
+                    u"\u2640-\u2642"
+                    u"\u2600-\u2B55"
+                    u"\u200d"
+                    u"\u23cf"
+                    u"\u23e9"
+                    u"\u231a"
+                    u"\ufe0f"  # dingbats
+                    u"\u3030"
+                    "]+", re.UNICODE)
 
 
 # parse command line arguments
@@ -85,7 +107,7 @@ def _parse_covid_tweet(tweet):
     user.id = int(tweet["User Id"].strip('"'))
     user.username = tweet['Screen Name'].lower()
     user.email = "{}@{}".format(user.username, EMAIL_DOMAIN)
-    user.about_me = tweet['User Bio'][0:140]
+    user.about_me = re.sub(_EMOJI, '', tweet['User Bio'])[0:140]
     # generate a random password
     password_chars = string.ascii_letters + string.digits + string.punctuation
     password = ''.join(random.choice(password_chars) for _ in range(PASSWORD_LENGTH))
@@ -93,7 +115,7 @@ def _parse_covid_tweet(tweet):
     # prepare post record
     post = Post()
     post.id = int(tweet['Tweet Id'].strip('"'))
-    post.body = tweet['Tweet Content'][0:140]
+    post.body = re.sub(_EMOJI, '', tweet['Tweet Content'])[0:140]
     post.user_id = user.id
     try:
         post.timestamp = datetime.strptime(tweet['Tweet Posted Time (UTC)'], '%d %b %Y %H:%M:%S')
