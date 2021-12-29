@@ -78,10 +78,15 @@ def parse_arguments():
     parser.add_argument('filename', type=str,
                         help='CSV file to be imported')
     parser.add_argument('-m', '--max-posts', type=int, default=0,  # import all lines by default
-                        help='maximum number of posts to be imported')
-    parser.add_argument('-o', '--offset', type=int, default=0,
-                        help='line offset within CSV file to start import at')
-    return parser.parse_args()
+                        help='maximum number of posts to be imported, defaults to 0 (unlimited)')
+    parser.add_argument('-o', '--offset', type=int, default=1,
+                        help='line offset within CSV file to start import at, defaults to 1')
+    args = parser.parse_args()
+    if args.max_posts < 0:
+        parser.error("maximum number of posts must be at least 0")
+    if args.max_posts < 1:
+        parser.error("line offset must be at least 1")
+    return args
 
 
 def _print_progress(stats):
@@ -137,7 +142,7 @@ def import_csv(filename, max_import_count=0, offset=0):
     """
     # ensure parameters are larger or equal than zero
     max_count = max(0, max_import_count)
-    start_line = max(0, offset)
+    start_line = max(1, offset)
     print("Importing up to {} posts from {}, starting at offset {}".format("UNLIMITED" if max_count <= 0 else max_count,
                                                                            filename, start_line))
     # statistics dictionary. the sum of posts* and users* should always be the same as tweet_cnt
