@@ -13,6 +13,7 @@
 # ******************************
 import argparse
 import csv
+import hashlib
 import inspect
 import os
 import re
@@ -35,6 +36,7 @@ from app.models import User, Post
 PASSWORD_LENGTH = 16
 EMAIL_DOMAIN = 'microblog.xyz'
 DEFAULT_DATETIME = datetime(1970, 1, 1)
+OBFUSCATE_USERNAME = True
 _BATCH_SIZE = 100
 # regular expression to capture emojis (source: https://stackoverflow.com/a/58356570)
 _EMOJI = re.compile("["
@@ -75,8 +77,8 @@ def parse_arguments():
     """)
     parser.add_argument('filename', type=str,
                         help='CSV file to be imported')
-    parser.add_argument('-m', '--max-tweets', type=int, default=0,  # import all lines by default
-                        help='maximum number of tweets to be imported')
+    parser.add_argument('-m', '--max-posts', type=int, default=0,  # import all lines by default
+                        help='maximum number of posts to be imported')
     parser.add_argument('-o', '--offset', type=int, default=0,
                         help='line offset within CSV file to start import at')
     return parser.parse_args()
@@ -106,6 +108,8 @@ def _parse_covid_tweet(tweet):
     user = User()
     user.id = int(tweet["User Id"].strip('"'))
     user.username = tweet['Screen Name'].lower()
+    if OBFUSCATE_USERNAME:  # obfuscate the username using SHA224, if requested
+        user.username = hashlib.sha224(user.username.encode('utf-8')).hexdigest()
     user.email = "{}@{}".format(user.username, EMAIL_DOMAIN)
     user.about_me = re.sub(_EMOJI, '', tweet['User Bio'])[0:140]
     # generate a random password
@@ -133,9 +137,9 @@ def import_csv(filename, max_import_count=0, offset=0):
     """
     # ensure parameters are larger or equal than zero
     max_count = max(0, max_import_count)
-    skip_count = max(0, offset)
-    print("Importing up to {} tweets from {}, starting at offset {}".format("UNLIMITED" if max_count <= 0 else max_count,
-                                                                            filename, skip_count))
+    start_line = max(0, offset)
+    print("Importing up to {} posts from {}, starting at offset {}".format("UNLIMITED" if max_count <= 0 else max_count,
+                                                                           filename, start_line))
     # statistics dictionary. the sum of posts* and users* should always be the same as tweet_cnt
     stats = {'line_no': 0, 'tweet_cnt': 0,
              'posts_ok': 0, 'posts_dup': 0, 'posts_err': 0,
@@ -144,7 +148,7 @@ def import_csv(filename, max_import_count=0, offset=0):
     # process the input file
     with open(filename, 'r') as csv_file:
         for line_no, row in enumerate(csv.DictReader(csv_file)):
-            if line_no <= skip_count:
+            if line_no <= start_line-1:
                 continue  # skip the first n lines
             # flags to remember insert success
             user_ok = False
@@ -205,8 +209,8 @@ if __name__ == '__main__':
     app = create_app()
     app_context = app.app_context()
     app_context.push()
-    # for testing purposes only
-    import_csv(filename=args.filename, max_import_count=args.max_tweets, offset=args.offset)
+    # perform the actual import
+    import_csv(filename=args.filename, max_import_count=args.max_posts, offset=args.offset)
     # tear down flask app
     db.session.remove()
     app_context.pop()
